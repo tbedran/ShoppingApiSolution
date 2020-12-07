@@ -42,6 +42,8 @@ namespace ShoppingApi.Services
                 .ProjectTo<GetProductDetailsResponse>(_mapperConfig)
                 .SingleOrDefaultAsync();
 
+            //check change
+
             return response;
 
             //return Task.FromResult(new GetProductDetailsResponse
