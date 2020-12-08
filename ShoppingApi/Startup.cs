@@ -13,6 +13,7 @@ using ShoppingApi.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ShoppingApi
@@ -29,8 +30,14 @@ namespace ShoppingApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                    options.JsonSerializerOptions.IgnoreNullValues = true;
+                });
             services.AddScoped<ILookupProducts, EfSqlProducts>();
+            services.AddScoped<IProductCommands, EfSqlProducts>();
             services.AddDbContext<ShoppingDataContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("shopping"));
@@ -45,6 +52,17 @@ namespace ShoppingApi
             
             services.AddSingleton<IMapper>(mapper);
             services.AddSingleton<MapperConfiguration>(mapperConfiguration);
+
+            // this makes it so we just have those settings available...demo coming
+            var configForPricing = new ConfigurationForPricing();
+            Configuration.GetSection(configForPricing.SectionName).Bind(configForPricing);
+
+            //this makes it so we can get this through IOptions<T>...
+            services.Configure<ConfigurationForPricing>(
+                Configuration.GetSection(configForPricing.SectionName));
+
+            services.AddSingleton<CurbsideChannel>();
+            services.AddHostedService<CurbsideOrderProcessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
